@@ -1,0 +1,9 @@
+{
+  "name": "offroad",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "build": "npm run check"
+  }
+}
