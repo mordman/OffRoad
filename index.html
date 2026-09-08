@@ -27,13 +27,13 @@
   #engineRow svg { width:16px; height:16px; flex:0 0 16px; }
   #engineRow .ok { color:#a9c77d; } #engineRow .bad { color:#e07b4f; }
   #modeBadge { position:absolute; right:18px; top:14px; padding:5px 16px; font-size:17px; letter-spacing:2px; }
-  #depthTag { position:absolute; right:18px; top:58px; padding:4px 14px; font-size:15px; display:none; color:#bcd8da; }
+  #killTag { position:absolute; right:18px; top:58px; padding:4px 14px; font-size:15px; color:#e8c9a0; }
+  #depthTag { position:absolute; right:18px; top:100px; padding:4px 14px; font-size:15px; display:none; color:#bcd8da; }
   #hintBar { position:absolute; right:18px; bottom:18px; padding:9px 16px; font-size:16px; color:#e5d8b8; max-width:460px; text-align:right; }
   #hintBar kbd { font-family:'IBM Plex Mono',monospace; font-size:12px; color:#f5ecd6; background:#4a3d28; border:1px solid #2c2314; border-bottom-width:3px; border-radius:5px 2px 5px 2px; padding:1px 6px; margin:0 2px; display:inline-block; }
   #msg { position:absolute; top:16%; left:50%; transform:translateX(-50%); padding:8px 22px; font-size:20px; letter-spacing:1px; color:#ffdcae; border-color:rgba(120,50,20,.9); opacity:0; transition:opacity .35s; }
   #waterTint { position:absolute; inset:0; background:rgba(18,62,70,.45); display:none; }
   #rainTint { position:absolute; inset:0; box-shadow:inset 0 0 120px rgba(40,60,80,.5); display:none; }
-  /* прицел и патроны */
   #cross { position:absolute; left:50%; top:50%; width:26px; height:26px; transform:translate(-50%,-50%); display:none; }
   #cross i { position:absolute; background:#f2e6cf; box-shadow:0 0 2px #000; }
   #cross i:nth-child(1){ left:12px; top:0; width:2px; height:8px; }
@@ -46,7 +46,7 @@
   #ammo span { font-size:15px; margin-left:8px; color:#e8d9b5; text-shadow:0 1px 2px #000; }
   #overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
              background:radial-gradient(ellipse at 50% 35%, #2c3a22 0%, #1a2314 70%); z-index:10; }
-  .ov-card { text-align:center; color:#efe3c4; font-family:'Neucha',cursive; padding:36px 46px; max-width:600px;
+  .ov-card { text-align:center; color:#efe3c4; font-family:'Neucha',cursive; padding:36px 46px; max-width:640px;
              background:rgba(28,24,16,.55); border:2px solid rgba(15,12,7,.8); border-radius:22px 8px 20px 10px; box-shadow:0 10px 40px rgba(0,0,0,.5); }
   .ov-card h1 { font-size:50px; letter-spacing:6px; color:#f5e9c8; text-shadow:0 3px 0 rgba(0,0,0,.45); }
   .ov-card h1 b { color:#e0903f; }
@@ -76,6 +76,7 @@
     </div>
   </div>
   <div id="modeBadge" class="panel">ЕЗДА</div>
+  <div id="killTag" class="panel">ТРОФЕИ: 0</div>
   <div id="depthTag" class="panel">глубина 1.4 м</div>
   <div id="msg" class="panel"></div>
   <div id="cross"><i></i><i></i><i></i><i></i></div>
@@ -85,17 +86,19 @@
 <div id="overlay">
   <div class="ov-card">
     <h1>ЛЕСНАЯ <b>ГЛУШЬ</b></h1>
-    <p class="sub">бесконечный дикий лес · симулятор квадроцикла</p>
+    <p class="sub">бесконечный дикий лес · квадроцикл и вертолёт</p>
     <div class="controls">
       <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span>газ · руль · тормоз / ходьба</span>
       <span><kbd>SPACE</kbd></span><span>ручной тормоз / прыжок</span>
-      <span><kbd>E</kbd></span><span>слезть / сесть на квадроцикл</span>
-      <span><kbd>R</kbd></span><span>завести двигатель · перевернуться</span>
-      <span><kbd>T</kbd></span><span>призвать квадроцикл (пешком)</span>
+      <span><kbd>E</kbd></span><span>слезть / сесть в ближайшую технику</span>
+      <span><kbd>R</kbd></span><span>завести/заглушить · перевернуть квадроцикл</span>
+      <span><kbd>T</kbd> / <kbd>G</kbd></span><span>призвать квадроцикл / вертолёт (пешком)</span>
       <span><kbd>SHIFT</kbd></span><span>бег · под водой — погружение</span>
       <span><kbd>C</kbd></span><span>погода: ясно → дождь → гроза</span>
       <span><kbd>N</kbd></span><span>перемотать время на 3 часа</span>
       <span><kbd>ПКМ</kbd> / <kbd>ЛКМ</kbd></span><span>прицелиться / выстрелить (пешком)</span>
+      <span><kbd>F</kbd></span><span>перезарядить винтовку</span>
+      <span>в полёте</span><span>W/S — наклон · A/D — разворот · SPACE/SHIFT — высота</span>
     </div>
     <button id="startBtn">Поехали</button>
     <p class="fine">мир бесконечен · звери и рыбы живут своей жизнью · погода меняется сама</p>
@@ -118,7 +121,6 @@ function mergeAll(geos){
   const list=mixed?geos.map(g=>g.index?g.toNonIndexed():g):geos;
   return mergeGeometries(list);
 }
-/* PBR-материал: сглаживание, шероховатость, металл, IBL */
 function STD(color,rough=0.8,metal=0,extra){
   const o={color,roughness:rough,metalness:metal,envMapIntensity:0.55};
   if(extra)Object.assign(o,extra);
@@ -182,7 +184,7 @@ const WEATHERS={
   rain :{rain:0.75,storm:0.15,wind:0.5,  label:'ДОЖДЬ'},
   storm:{rain:1,   storm:1,   wind:1.05, label:'ГРОЗА'}
 };
-const weather={mode:'clear',cur:{rain:0,storm:0,wind:0.22},timer:rr(80,170)};
+const weather={mode:'clear',cur:{rain:0,storm:0,wind:0.22},timer:rr(180,420)};
 let windAng=rr(0,6.28);
 const CYCLE=21600;
 const env={time:4500,clockH:8.3,dayF:1,nightF:0,warm:0,rain:0,storm:0,wind:0.22,
@@ -301,7 +303,6 @@ function getGround(x,z){
       const dx=x-o.x,dz=z-o.z,d=Math.hypot(dx,dz);
       if(d<o.r){const cap=o.cy+Math.sqrt(o.r*o.r-d*d)*0.8;if(cap>h)h=cap;}
     }else if(o.type==='tree'){
-      /* корневой наплыв уменьшен — не подбрасывает квадроцикл */
       const d=Math.hypot(x-o.x,z-o.z);
       if(d<o.r+0.35){const cap=o.base+(1-d/(o.r+0.35))*0.05;if(cap>h)h=cap;}
     }
@@ -381,17 +382,14 @@ const skyMat=new THREE.ShaderMaterial({
 });
 const skyMesh=new THREE.Mesh(new THREE.SphereGeometry(760,26,18),skyMat);
 scene.add(skyMesh);
-
-/* IBL-окружение для PBR: снимаем небо в PMREM один раз */
 {
   const pm=new THREE.PMREMGenerator(renderer);
   const es=new THREE.Scene();
-  es.add(new THREE.Mesh(new THREE.SphereGeometry(400,24,16),skyMat));
+  es.add(new THREE.Mesh(new THREE.SphereGeometry(400,24,16),skyMat);
   const envRT=pm.fromScene(es,0.04,1,800);
   scene.environment=envRT.texture;
   pm.dispose();
 }
-
 const starGeo=new THREE.BufferGeometry();
 {
   const N=650,arr=new Float32Array(N*3);
@@ -446,8 +444,8 @@ const brushGeo=new THREE.BufferGeometry();
   const side=new Float32Array(BRUSH_MAX*6);
   const inten=new Float32Array(BRUSH_MAX*6);
   brushGeo.setAttribute('position',new THREE.BufferAttribute(pos,3).setUsage(THREE.DynamicDrawUsage));
-  brushGeo.setAttribute('aSide',new THREE.BufferAttribute(side,1).setUsage(THREE.DynamicDrawUsage));
-  brushGeo.setAttribute('aInt',new THREE.BufferAttribute(inten,1).setUsage(THREE.DynamicDrawUsage));
+  brushGeo.setAttribute('aSide',new THREE.BufferAttribute(side,1).setUsage(THREE.DynamicDrawUsage);
+  brushGeo.setAttribute('aInt',new THREE.BufferAttribute(inten,1).setUsage(THREE.DynamicDrawUsage);
 }
 const brushMat=new THREE.ShaderMaterial({
   transparent:true,blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,side:THREE.DoubleSide,
@@ -545,7 +543,7 @@ function shiftTrackOrigin(nx,nz){
   trackOriginU.value.set(nx,nz);
 }
 
-/* ============ 5. ЗЕМЛЯ (PBR + колеи) ============ */
+/* ============ 5. ЗЕМЛЯ ============ */
 const terrainWetU={value:0};
 const terrainMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:1,metalness:0});
 terrainMat.onBeforeCompile=sh=>{
@@ -789,7 +787,7 @@ function buildChunk(i,j){
   const x0=i*CHUNK,z0=j*CHUNK;
   const N=TSEG+1,W=WSEG+1;
   const step=CHUNK/TSEG;
-  const H=new Float32Array((N+2)*(N+2));
+  const H=new Float32Array((N+2)*(N+2);
   for(let r=0;r<N+2;r++)for(let c=0;c<N+2;c++)
     H[r*(N+2)+c]=terrainHeight(x0+(c-1)*step,z0+(r-1)*step);
   const geo=new THREE.PlaneGeometry(CHUNK,CHUNK,TSEG,TSEG);
@@ -925,7 +923,7 @@ function buildVeg(rec){
   add(gBush,matBush,bushes,()=>tmpC.setHSL(rr(0.26,0.33),rr(0.3,0.45),rr(0.18,0.28)),false);
   add(gGrass,matGrass,grass,()=>tmpC.setHSL(rr(0.2,0.28),rr(0.35,0.55),rr(0.3,0.45)),false);
   add(gFlower,matFlower,flowers,
-    ()=>rng()<0.4?tmpC.setHSL(0.12,0.8,rr(0.6,0.72)):
+    ()=>rng()<0.4?tmpC.setHSL(0.12,0.8,rr(0.6,0.72):
          rng()<0.5?tmpC.setHSL(0.02,0.35,rr(0.85,0.95)):
                    tmpC.setHSL(0.55,0.55,rr(0.62,0.75)),false);
   add(gMush,matMush,mush,
@@ -943,7 +941,7 @@ function buildVeg(rec){
       tmpS.set(len,it.r,it.r);
       tmpM.compose(tp.set(it.ax,it.ay,it.az),tmpQ,tmpS);
       im.setMatrixAt(k,tmpM);
-      im.setColorAt(k,tmpC.setHSL(0.08,0.28,rr(0.2,0.3)));
+      im.setColorAt(k,tmpC.setHSL(0.08,0.28,rr(0.2,0.3));
     });
     im.instanceColor.needsUpdate=true;
     im.castShadow=im.receiveShadow=true;
@@ -1251,19 +1249,193 @@ let steeringG=null,gripML=null,gripMR=null,headlight=null;
   atvG.quaternion.copy(atv.quat);
 }
 
-/* ============ 10. ОХОТНИК: скелет, IK, винтовка ============ */
+/* ============ 9b. МИНИ-ВЕРТОЛЁТ ============ */
+const HM={
+  body:STD(0xd86a24,0.45,0.15),
+  bodyD:STD(0x9c4514,0.5,0.1),
+  glass:new THREE.MeshStandardMaterial({color:0xbfd8e0,roughness:0.08,metalness:0.1,transparent:true,opacity:0.35,envMapIntensity:1.0}),
+  dark:STD(0x2c2d30,0.55,0.4),
+  steel:STD(0x9ba0a6,0.3,0.95),
+  skid:STD(0x3c3d40,0.5,0.4),
+  blade:STD(0x1f2022,0.7,0.2),
+  tip:STD(0xe8e2d5,0.7),
+};
+const heliG=new THREE.Group();
+scene.add(heliG);
+let mainRotor=null,tailRotor=null,rotorDisc=null;
+{
+  heliG.add(RB(1.25,1.15,1.6,0.34,HM.body,0,0.30,0.05));
+  heliG.add(RB(1.05,0.9,0.6,0.2,HM.body,0,0.30,0.75,0.05));
+  const glass=new THREE.Mesh(new THREE.SphereGeometry(0.62,20,16),HM.glass);
+  glass.scale.set(0.9,0.72,0.95);glass.position.set(0,0.42,0.72);
+  heliG.add(glass);
+  for(const s of[-1,1]){
+    const sg=new THREE.Mesh(new THREE.SphereGeometry(0.34,14,10),HM.glass);
+    sg.scale.set(0.25,0.55,0.75);sg.position.set(s*0.64,0.40,0.35);
+    heliG.add(sg);
+  }
+  heliG.add(RB(1.0,0.16,0.7,0.06,HM.bodyD,0,0.92,0.0));
+  const mast=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.09,0.4,10),HM.steel);
+  mast.position.set(0,1.16,-0.05);
+  heliG.add(mast);
+  heliG.add(RB(0.5,0.34,0.7,0.14,HM.bodyD,0,0.98,-0.85));
+  const exhaust=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.07,0.3,8),M.steel);
+  exhaust.rotation.set(Math.PI/2-0.2,0,0);
+  exhaust.position.set(0.3,1.05,-1.1);
+  heliG.add(exhaust);
+  mainRotor=new THREE.Group();
+  mainRotor.position.set(0,1.4,-0.05);
+  const hub=new THREE.Mesh(new THREE.CylinderGeometry(0.11,0.13,0.12,10),HM.steel);
+  mainRotor.add(hub);
+  for(const a of[0,Math.PI/2,Math.PI,Math.PI*1.5]){
+    const blade=new THREE.Mesh(new THREE.BoxGeometry(4.4,0.025,0.24),HM.blade);
+    blade.rotation.y=a;
+    blade.castShadow=true;
+    mainRotor.add(blade);
+    const tipL=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.03,0.26),HM.tip);
+    tipL.rotation.y=a;tipL.position.set(Math.sin(a)*2.05,0,Math.cos(a)*2.05);
+    mainRotor.add(tipL);
+    const tipR=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.03,0.26),HM.tip);
+    tipR.rotation.y=a;tipR.position.set(-Math.sin(a)*2.05,0,-Math.cos(a)*2.05);
+    mainRotor.add(tipR);
+  }
+  heliG.add(mainRotor);
+  rotorDisc=new THREE.Mesh(new THREE.CircleGeometry(2.25,28),
+    new THREE.MeshBasicMaterial({color:0x555046,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}));
+  rotorDisc.rotation.x=-Math.PI/2;
+  rotorDisc.position.set(0,1.42,-0.05);
+  heliG.add(rotorDisc);
+  heliG.add(tubeMesh([[0,0.45,-0.75],[0,0.62,-2.4],[0,0.75,-3.0]],0.075,HM.bodyD,20));
+  heliG.add(RB(0.7,0.05,0.3,0.02,HM.bodyD,0,0.60,-2.5,0.08));
+  heliG.add(RB(0.06,0.65,0.42,0.03,HM.body,0,1.0,-2.95,0.12));
+  heliG.add(RB(0.05,0.3,0.2,0.02,HM.body,0.35,0.95,-2.95,0,0,0.4));
+  tailRotor=new THREE.Group();
+  tailRotor.position.set(0.14,0.78,-3.0);
+  for(const a of[0,Math.PI/2]){
+    const bl=new THREE.Mesh(new THREE.BoxGeometry(0.03,1.0,0.1),HM.blade);
+    bl.rotation.x=a;
+    tailRotor.add(bl);
+  }
+  const trHub=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.08,8),HM.steel);
+  trHub.rotation.z=Math.PI/2;
+  tailRotor.add(trHub);
+  heliG.add(tailRotor);
+  for(const s of[-1,1]){
+    heliG.add(tubeMesh([[s*0.75,-1.0,0.85],[s*0.75,-1.0,1.15],[s*0.75,-0.98,-0.9],[s*0.75,-1.02,-1.6]],0.05,HM.skid,16));
+    heliG.add(tubeMesh([[s*0.55,-0.28,0.75],[s*0.75,-0.98,0.7]],0.035,HM.skid,8));
+    heliG.add(tubeMesh([[s*0.55,-0.28,-0.45],[s*0.75,-0.98,-0.5]],0.035,HM.skid,8));
+    heliG.add(tubeMesh([[s*0.55,0.1,-2.3],[s*0.75,-0.5,-2.35]],0.035,HM.skid,8));
+  }
+  heliG.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+  const hl=new THREE.Mesh(new THREE.SphereGeometry(0.09,12,10),M.lens);
+  hl.position.set(0,0.3,0.98);
+  heliG.add(hl);
+}
+const heli={
+  pos:new V3(0,0,0),vel:new V3(),yaw:0,pitch:0,roll:0,
+  rotor:0,engineOn:false,col:1,grounded:true,skidH:1.05,
+};
+{
+  const p=findLandSpot(START.x,START.z,10,28)||{x:START.x+15,z:START.z+15};
+  heli.pos.set(p.x,getGround(p.x,p.z)+heli.skidH,p.z);
+  heli.yaw=rr(0,6.28);
+  heliG.position.copy(heli.pos);
+  heliG.rotation.set(0,heli.yaw,0);
+}
+const _heliE=new THREE.Euler(0,0,0,'YXZ');
+const ROOT_HELI_V=new V3(0,0.10,0.30);
+function stepHeli(h,driver,inp){
+  heli.rotor=damp(heli.rotor,heli.engineOn?1:0,heli.engineOn?0.35:0.5,h);
+  const power=0.55+0.45*heli.rotor;
+  const g=9.81;
+  let pitchT=0,rollT=0,colT=1.0;
+  if(driver&&heli.rotor>0.5){
+    pitchT=(inp.fwd?0.5:0)+(inp.back?-0.32:0);
+    rollT=(inp.left?0.32:0)+(inp.right?-0.32:0);
+    if(inp.jump)colT=1.5;
+    else if(inp.run)colT=0.55;
+  }
+  heli.pitch=damp(heli.pitch,pitchT,2.5,h);
+  heli.roll=damp(heli.roll,rollT,2.5,h);
+  heli.col=damp(heli.col,colT,4,h);
+  heli.yaw-=Math.sin(heli.roll)*2.6*power*h;
+  heli.up.set(0,1,0).applyEuler(_heliE.set(heli.pitch,heli.yaw,heli.roll,'YXZ'));
+  const comp=1/Math.max(0.75,Math.cos(heli.pitch)*Math.cos(heli.roll));
+  const thrust=g*heli.col*power*comp;
+  heli.vel.x+=heli.up.x*thrust*h;
+  heli.vel.y+=heli.up.y*thrust*h-g*h;
+  heli.vel.z+=heli.up.z*thrust*h;
+  const vh=Math.hypot(heli.vel.x,heli.vel.z);
+  const dH=(0.25+0.008*vh)*power;
+  heli.vel.x-=heli.vel.x*dH;
+  heli.z_fix=0;
+  heli.vel.x+=Math.cos(windAng)*env.wind*0.25*h;
+  heli.vel.z-=heli.vel.z*dH;
+  heli.vel.z+=Math.sin(windAng)*env.wind*0.25*h;
+  heli.vel.y-=heli.vel.y*0.75*h;
+  heli.vel.clampLength(0,32);
+  heli.pos.addScaledVector(heli.vel,h);
+  const gY=Math.max(getGround(heli.pos.x,heli.pos.z),WATER_Y);
+  if(heli.pos.y-heli.skidH<gY){
+    if(heli.vel.y<-5.5){
+      Audio.thud(0.8);
+      if(heli.vel.y<-9)msg('Жёсткая посадка!',1.5);
+    }
+    heli.pos.y=gY+heli.skidH;
+    heli.vel.y=0;
+    if(gY<WATER_Y-0.05&&heli.vel.length()>3)
+      for(let i=0;i<10;i++)
+        particles.emit(heli.pos.x+rr(-1,1),WATER_Y+0.1,heli.pos.z+rr(-1,1),rr(-3,3),rr(1,3),rr(-3,3),'water',0.1,0.6);
+    heli.vel.x*=1-3*h;
+    heli.vel.z*=1-3*h;
+    heli.pitch=damp(heli.pitch,0,8,h);
+    heli.roll=damp(heli.roll,0,8,h);
+    heli.grounded=true;
+  }else heli.grounded=false;
+}
+function updateHeliVisuals(dt){
+  heliG.position.copy(heli.pos);
+  heliG.rotation.set(heli.pitch,heli.yaw,heli.roll,'YXZ');
+  const spin=heli.rotor*(22+32);
+  mainRotor.rotation.y+=spin*dt;
+  tailRotor.rotation.x+=heli.rotor*55*dt;
+  rotorDisc.material.opacity=heli.rotor*0.22;
+  rotorDisc.visible=heli.rotor>0.2;
+  mainRotor.rotation.x=clamp(-heli.pitch*0.1,-0.06,0.06);
+  mainRotor.rotation.z=clamp(heli.roll*0.1,-0.06,0.06);
+}
+let heliDustT=0;
+function updateHeliFX(dt){
+  if(heli.rotor<0.4)return;
+  const g=Math.max(getGround(heli.pos.x,heli.pos.z),WATER_Y);
+  const alt=heli.pos.y-heli.skidH-g;
+  if(alt>4.5)return;
+  heliDustT+=dt;
+  if(heliDustT>0.06){
+    heliDustT=0;
+    const n=alt<2?4:2;
+    for(let i=0;i<n;i++){
+      const a=rr(0,6.28),rad=rr(1.2,2.6);
+      const type=g<WATER_Y+0.05&&terrainHeight(heli.pos.x+Math.sin(a)*rad,heli.pos.z+Math.cos(a)*rad)<WATER_Y?'water':'dust';
+      particles.emit(heli.pos.x+Math.sin(a)*rad,g+0.1,heli.pos.z+Math.cos(a)*rad,
+        Math.sin(a)*rr(3,8),rr(0.5,2.5),Math.cos(a)*rr(3,8),type,rr(0.08,0.2),rr(0.5,0.9));
+    }
+  }
+}
+
+/* ============ 10. ОХОТНИК ============ */
 const CH={
   skin:STD(0xd9a184,0.55),
   beard:STD(0x4a3a2c,0.9),
   eye:STD(0x241d18,0.3,0.2),
-  jacket:STD(0x4c5638,0.9),      /* оливковая куртка */
+  jacket:STD(0x4c5638,0.9),
   jacketD:STD(0x3c4430,0.9),
-  vest:STD(0xd06018,0.85),       /* рыжий охотничий жилет */
+  vest:STD(0xd06018,0.85),
   pants:STD(0x4a4438,0.9),
   boots:STD(0x4a3423,0.45,0.05),
   strap:STD(0x2a241d,0.7),
   gloves:STD(0x33302a,0.8),
-  cap:STD(0xd06018,0.85),        /* рыжая кепка */
+  cap:STD(0xd06018,0.85),
   capBrim:STD(0x3a3f2e,0.9),
   pack:STD(0x4c5238,0.95),
 };
@@ -1292,7 +1464,6 @@ const ROOT_AT_V=new V3(0,0.36,-0.30);
   root.rotation.order='YXZ';
   rig.root=root;
   root.add(RB(0.30,0.17,0.21,0.06,CH.pants,0,-0.05,0));
-  /* торс охотника: куртка + жилет + карманы + рюкзак */
   const torso=limbSeg(CH.jacket,0.13,TORSO_L);
   torso.add(RB(0.34,0.32,0.25,0.10,CH.jacket,0,-0.26,0.01));
   torso.add(RB(0.30,0.24,0.045,0.02,CH.vest,0,-0.25,0.12));
@@ -1309,7 +1480,6 @@ const ROOT_AT_V=new V3(0,0.36,-0.30);
   const bed=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.26,10),CH.jacketD);
   bed.rotation.z=Math.PI/2;bed.position.set(0,-0.08,-0.17);torso.add(bed);
   rig.torso=torso;root.add(torso);
-  /* голова: череп, борода, уши, нос, глаза, кепка */
   const head=new THREE.Group();
   const skull=new THREE.Mesh(new THREE.SphereGeometry(0.115,24,18),CH.skin);
   skull.scale.set(1,1.08,1.02);skull.position.set(0,0.10,0.005);
@@ -1341,7 +1511,6 @@ const ROOT_AT_V=new V3(0,0.36,-0.30);
   const neckM=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.055,0.09,10),CH.skin);
   neckM.position.y=-0.015;head.add(neckM);
   rig.head=head;root.add(head);
-  /* руки в куртке, ноги в штанах с наколенниками */
   rig.armUL=limbSeg(CH.jacket,0.05,ARM_U);
   rig.armFL=limbSeg(CH.jacket,0.043,ARM_F);
   rig.armUR=limbSeg(CH.jacket,0.05,ARM_U);
@@ -1354,7 +1523,6 @@ const ROOT_AT_V=new V3(0,0.36,-0.30);
   rig.legUL.add(RB(0.13,0.10,0.06,0.03,CH.jacketD,0,-0.30,0.03));
   rig.legUR.add(RB(0.13,0.10,0.06,0.03,CH.jacketD,0,-0.30,0.03));
   root.add(rig.legUL,rig.legFL,rig.legUR,rig.legFR);
-  /* высокие ботинки */
   const makeBoot=()=>{
     const b=new THREE.Group();
     const shaft=new THREE.Mesh(new THREE.CylinderGeometry(0.062,0.07,0.16,10),CH.boots);
@@ -1381,7 +1549,7 @@ const human={
   phase:0,stepFlag:1,bob:0,turnRate:0,prevYaw:0,prevVy:0,landT:0
 };
 
-/* --- винтовка с оптикой --- */
+/* --- винтовка --- */
 const RIF={
   wood:STD(0x6b4526,0.5),
   woodD:STD(0x503221,0.55),
@@ -1392,14 +1560,14 @@ const RIF={
 const rifleG=new THREE.Group();
 const mzMk=new THREE.Object3D();
 {
-  rifleG.add(RB(0.055,0.145,0.16,0.025,RIF.wood,0,-0.045,-0.115,0.32));   /* приклад */
+  rifleG.add(RB(0.055,0.145,0.16,0.025,RIF.wood,0,-0.045,-0.115,0.32));
   rifleG.add(RB(0.05,0.10,0.10,0.02,RIF.woodD,0,-0.01,-0.03,0.1));
-  rifleG.add(RB(0.042,0.10,0.07,0.015,RIF.wood,0,-0.055,0.03,-0.35));     /* шейка */
-  rifleG.add(RB(0.05,0.062,0.20,0.01,RIF.steel,0,0.012,0.10));            /* коробка */
-  rifleG.add(RB(0.038,0.075,0.09,0.01,RIF.dark,0,-0.055,0.115));          /* магазин */
-  rifleG.add(RB(0.014,0.01,0.06,0.004,RIF.steel,0,-0.075,0.045));         /* скоба */
-  rifleG.add(RB(0.008,0.028,0.008,0.003,RIF.steel,0,-0.062,0.05));        /* крючок */
-  rifleG.add(RB(0.048,0.05,0.30,0.02,RIF.wood,0,-0.006,0.29));            /* цевьё */
+  rifleG.add(RB(0.042,0.10,0.07,0.015,RIF.wood,0,-0.055,0.03,-0.35));
+  rifleG.add(RB(0.05,0.062,0.20,0.01,RIF.steel,0,0.012,0.10));
+  rifleG.add(RB(0.038,0.075,0.09,0.01,RIF.dark,0,-0.055,0.115));
+  rifleG.add(RB(0.014,0.01,0.06,0.004,RIF.steel,0,-0.075,0.045));
+  rifleG.add(RB(0.008,0.028,0.008,0.003,RIF.steel,0,-0.062,0.05));
+  rifleG.add(RB(0.048,0.05,0.30,0.02,RIF.wood,0,-0.006,0.29));
   const barrel=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.015,0.52,14),RIF.steel);
   barrel.rotation.x=Math.PI/2;barrel.position.set(0,0.018,0.50);
   rifleG.add(barrel);
@@ -1412,7 +1580,6 @@ const mzMk=new THREE.Object3D();
   const knob=new THREE.Mesh(new THREE.SphereGeometry(0.016,10,8),RIF.steel);
   knob.position.set(0.093,0.02,0.10);
   rifleG.add(knob);
-  /* оптика */
   const tube=new THREE.Mesh(new THREE.CylinderGeometry(0.023,0.023,0.20,14),RIF.dark);
   tube.rotation.x=Math.PI/2;tube.position.set(0,0.082,0.22);
   rifleG.add(tube);
@@ -1437,7 +1604,8 @@ const mzMk=new THREE.Object3D();
   rig.root.add(rifleG);
   rifleG.traverse(o=>{if(o.isMesh)o.castShadow=true;});
 }
-const gun={aiming:false,pitch:0,ammo:5,cd:0,recoil:0,flash:0,reload:0};
+const gun={aiming:false,locked:false,pitch:0,ammo:5,cd:0,recoil:0,flash:0,reload:0};
+let kills=0;
 const gunLight=new THREE.PointLight(0xffc27a,0,9,2);
 scene.add(gunLight);
 const _one=new V3(1,1,1),_rmat=new THREE.Matrix4();
@@ -1450,15 +1618,24 @@ function riflePoint(lx,ly,lz,out){
   out.set(lx,ly,lz).applyMatrix4(_rmat);
   return out;
 }
-function rifleCarry(){setRifle(0.19,-0.06,0.22,0.55,0.1,0.2);}
-function rifleAim(){setRifle(0.16,0.09,-0.04-0.06*gun.recoil,-gun.pitch+0.14*gun.recoil,0,0.06);}
+function rifleCarry(){
+  const swy=Math.sin(human.phase)*0.03;
+  setRifle(-0.12,0.11+Math.sin(human.phase*2)*0.007,0.22,0.45+swy*0.5,-0.06,0.06);
+}
+function rifleAim(){
+  const rx=-gun.pitch+0.13*gun.recoil;
+  const cs=Math.cos(rx),sn=Math.sin(rx);
+  const by=-0.03*cs+0.14*sn;
+  const bz=-0.03*sn-0.14*cs;
+  setRifle(-0.15,0.38-by,0.02-bz-0.05*gun.recoil,rx,0,0.05);
+}
 
 const _ikd=new V3(),_ikp=new V3(),_ikUp=new V3(0,1,0),_ikZ=new V3(0,0,1);
 function solveIK(S,T,L1,L2,hint,mid){
   _ikd.subVectors(T,S);
   let d=_ikd.length();
   if(d<1e-5){_ikd.set(0,-0.01,0);d=0.01;}
-  const reach=L1+L2-0.015,dmin=Math.abs(L1-L2)+0.015;
+  const reach=L1+L2+0.035,dmin=Math.abs(L1-L2)+0.015;
   const dc=clamp(d,dmin,reach);
   _ikd.multiplyScalar(1/d);
   if(dc!==d)T.copy(S).addScaledVector(_ikd,dc);
@@ -1477,7 +1654,7 @@ function orient(grp,a,b){
   if(d>1e-5){
     _od.multiplyScalar(1/d);
     grp.quaternion.setFromUnitVectors(DOWN,_od);
-    grp.scale.y=clamp(d/grp.userData.len,0.85,1.12);
+    grp.scale.y=clamp(d/grp.userData.len,0.85,1.15);
   }
 }
 const _tu=new V3(),_ts=new V3(),_e2=new THREE.Euler(),_q2=new THREE.Quaternion(),
@@ -1509,7 +1686,6 @@ function applyRig(){
   rig.bootL.rotation.set(bootLX,0,0);rig.bootR.rotation.set(bootRX,0,0);
   rig.handL.position.copy(JP.haL);rig.handR.position.copy(JP.haR);
 }
-/* --- водитель: винтовка за спиной, руки на руле --- */
 function poseDriver(lean,pitch){
   const t=performance.now()*0.001;
   const br=Math.sin(t*1.5)*0.01;
@@ -1519,8 +1695,8 @@ function poseDriver(lean,pitch){
   JP.pelvis.set(0,-ac*0.22+br,0);
   const tp=0.62+pitch*0.6;
   torsoBase(tp,0,lean);
-  gripML.getWorldPosition(_gk1);atvG.worldToLocal(_gk1);_gk1.sub(ROOT_AT_V);
-  gripMR.getWorldPosition(_gk2);atvG.worldToLocal(_gk2);_gk2.sub(ROOT_AT_V);
+  gripMR.getWorldPosition(_gk1);atvG.worldToLocal(_gk1);_gk1.sub(ROOT_AT_V);
+  gripML.getWorldPosition(_gk2);atvG.worldToLocal(_gk2);_gk2.sub(ROOT_AT_V);
   JP.haL.copy(_gk1);JP.haR.copy(_gk2);
   _hint.set(0.75,-0.35,-0.45);solveIK(JP.shL,JP.haL,ARM_U,ARM_F,_hint,JP.elL);
   _hint.set(-0.75,-0.35,-0.45);solveIK(JP.shR,JP.haR,ARM_U,ARM_F,_hint,JP.elR);
@@ -1532,7 +1708,26 @@ function poseDriver(lean,pitch){
   bootLX=0.25;bootRX=0.25;
   setRifle(0.16,0.12,-0.21+Math.sin(t*1.5)*0.004,-1.18,0.30+lean*0.2,0.52);
 }
-/* --- пешеход: честная походка (опора/перенос), шаг = f(скорости) --- */
+/* --- лётчик --- */
+function poseHeli(){
+  const t=performance.now()*0.001;
+  const br=Math.sin(t*1.5)*0.008;
+  rig.root.position.copy(ROOT_HELI_V);
+  rig.root.rotation.set(0,0,0);
+  JP.pelvis.set(0,br,0);
+  torsoBase(0.16-heli.pitch*0.35,0,-heli.roll*0.45);
+  JP.haR.set(0.17,0.28,0.42);
+  JP.haL.set(-0.32,0.20,0.05);
+  _hint.set(0.5,-0.45,-0.1);solveIK(JP.shR,JP.haR,ARM_U,ARM_F,_hint,JP.elR);
+  _hint.set(-0.65,-0.4,-0.2);solveIK(JP.shL,JP.haL,ARM_U,ARM_F,_hint,JP.elL);
+  JP.hiL.set(0.10,-0.05,0.05);JP.hiR.set(-0.10,-0.05,0.05);
+  JP.ftL.set(0.24,-0.60,0.32);JP.ftR.set(-0.24,-0.60,0.32);
+  _hint.set(0.26,0.22,0.9);solveIK(JP.hiL,JP.ftL,LEG_T,LEG_S,_hint,JP.knL);
+  _hint.set(-0.26,0.22,0.9);solveIK(JP.hiR,JP.ftR,LEG_T,LEG_S,_hint,JP.knR);
+  headRX=0.03-heli.pitch*0.55;headRY=0;headRZ=-heli.roll*0.55;
+  bootLX=0.2;bootRX=0.2;
+  setRifle(0.16,0.12,-0.21,-1.18,0.30,0.52);
+}
 function poseWalker(){
   const t=performance.now()*0.001;
   const spd=Math.hypot(human.vel.x,human.vel.z);
@@ -1540,7 +1735,7 @@ function poseWalker(){
   const movF=clamp(spd/1.1,0,1);
   const idleF=1-movF;
   const br=Math.sin(t*1.7);
-  const land=human.landT>0?Math.sin(Math.PI*(1-human.landT/0.34)):0;
+  const land=human.landT>0?Math.sin(Math.PI*(1-human.landT/0.34):0;
   const lean=clamp(-human.turnRate*0.055,-0.32,0.32)*movF;
   const sw=Math.sin(human.phase);
   human.bob=Math.abs(Math.cos(human.phase))*0.055*movF;
@@ -1560,12 +1755,12 @@ function poseWalker(){
     let z,y,bootP;
     if(frac<stanceFrac){
       const prog=frac/stanceFrac;
-      z=stride*(1-2*prog);           /* опора: стопа «прилипла» и едет назад */
+      z=stride*(1-2*prog);
       y=0;
-      bootP=lerp(0.18,-0.28,prog);   /* пятка → носок */
+      bootP=lerp(0.18,-0.28,prog);
     }else{
       const prog=(frac-stanceFrac)/(1-stanceFrac);
-      z=-stride+2*stride*prog;       /* перенос вперёд по дуге */
+      z=-stride+2*stride*prog;
       y=lift*Math.sin(Math.PI*prog);
       bootP=lerp(-0.28,0.22,prog);
     }
@@ -1592,22 +1787,19 @@ function poseWalker(){
       bootRX=f.bootP;
     }
   }
-  /* винтовка */
   if(gun.aiming)rifleAim();
   else rifleCarry();
-  /* руки */
   if(gun.aiming){
-    riflePoint(0.012,-0.055,0.05,JP.haR);
-    riflePoint(0.0,-0.045,0.32,JP.haL);
-    _hint.set(0.55,-0.5,-0.25);solveIK(JP.shR,JP.haR,ARM_U,ARM_F,_hint,JP.elR);
-    _hint.set(-0.35,-0.55,0.25);solveIK(JP.shL,JP.haL,ARM_U,ARM_F,_hint,JP.elL);
-    headRX=-gun.pitch*0.75+0.06;headRY=0;headRZ=0.04;
+    riflePoint(0.012,-0.055,0.04,JP.haR);
+    riflePoint(0,-0.04,0.24,JP.haL);
+    _hint.set(-0.55,-0.45,-0.2);solveIK(JP.shR,JP.haR,ARM_U,ARM_F,_hint,JP.elR);
+    _hint.set(0.4,-0.5,0.2);solveIK(JP.shL,JP.haL,ARM_U,ARM_F,_hint,JP.elL);
+    headRX=-gun.pitch*0.8+0.05;headRY=0;headRZ=0.06;
   }else{
-    riflePoint(0.01,-0.05,0.06,JP.haR);
-    _hint.set(0.5,-0.55,-0.4);solveIK(JP.shR,JP.haR,ARM_U,ARM_F,_hint,JP.elR);
-    const az=-feet[-1].z*0.55;               /* левая рука в противофазе левой ноге */
-    JP.haL.copy(JP.shL).add(_tv.set(-0.07,-0.40+runF*0.12,az*(0.4+0.5*runF)+br*0.02*idleF));
-    _hint.set(-0.4,-0.6-runF*0.15,-0.35-runF*0.3);solveIK(JP.shL,JP.haL,ARM_U,ARM_F,_hint,JP.elL);
+    riflePoint(0.012,-0.05,0.03,JP.haR);
+    riflePoint(0,-0.038,0.19,JP.haL);
+    _hint.set(-0.55,-0.5,-0.3);solveIK(JP.shR,JP.haR,ARM_U,ARM_F,_hint,JP.elR);
+    _hint.set(0.35,-0.55,0.1);solveIK(JP.shL,JP.haL,ARM_U,ARM_F,_hint,JP.elL);
     headRX=-0.06-runF*0.14+land*0.2;
     headRY=sw*0.05*movF;
     headRZ=-lean*0.4;
@@ -1625,10 +1817,10 @@ function poseAir(){
   _hint.set(0.25,0.3,0.9);solveIK(JP.hiL,JP.ftL,LEG_T,LEG_S,_hint,JP.knL);
   _hint.set(-0.25,0.3,0.9);solveIK(JP.hiR,JP.ftR,LEG_T,LEG_S,_hint,JP.knR);
   rifleCarry();
-  riflePoint(0.01,-0.05,0.06,JP.haR);
-  _hint.set(0.5,-0.3,-0.2);solveIK(JP.shR,JP.haR,ARM_U,ARM_F,_hint,JP.elR);
-  JP.haL.copy(JP.shL).add(_tv.set(-0.22,-0.08+0.22*fall-0.28*rise,0.16));
-  _hint.set(-0.5,-0.25,0);solveIK(JP.shL,JP.haL,ARM_U,ARM_F,_hint,JP.elL);
+  riflePoint(0.012,-0.05,0.03,JP.haR);
+  _hint.set(-0.5,-0.3,-0.2);solveIK(JP.shR,JP.haR,ARM_U,ARM_F,_hint,JP.elR);
+  JP.haL.copy(JP.shL).add(_tv.set(0.20,-0.08+0.22*fall-0.28*rise,0.16));
+  _hint.set(0.45,-0.25,0);solveIK(JP.shL,JP.haL,ARM_U,ARM_F,_hint,JP.elL);
   headRX=-0.15;headRY=0;headRZ=0;
   bootLX=0.4+fall*0.3;bootRX=0.4+fall*0.3;
   human.bob=0;
@@ -1639,6 +1831,7 @@ function poseSwim(){
   const vy=clamp(human.vel.y/2.5,-1,1);
   JP.pelvis.set(0,0.05,0);
   torsoBase(-0.15+vy*0.25,0,Math.sin(t*0.8)*0.04);
+  setRifle(0,0.30,-0.20,1.25,0.1,0.55);
   for(const side of[1,-1]){
     const ang=p+(side>0?0:Math.PI);
     const k=Math.sin(p*2+(side>0?0:Math.PI));
@@ -1771,13 +1964,19 @@ function stepATV(h,driver,input){
       if(input.brake>0&&vLong>0.5)brakeT=atv.BRAKE;
       else if(input.brake>0)driveT=-atv.TMAX*0.42;
       if(throttle>0)driveT+=atv.TMAX*throttle;
-    }else brakeT=atv.BRAKE*1.1;
-    if(hand&&!w.front){brakeT+=atv.BRAKE*1.2;mu*=0.9;}
+      if(hand&&!w.front){brakeT+=atv.BRAKE*1.2;mu*=0.9;}
+    }else if(atv.vel.length()<0.8){
+      brakeT=atv.BRAKE*1.2;
+    }
     const slipRatio=(w.omega*w.r-vLong)/Math.max(Math.abs(vLong),1.6);
     let Flong=clamp(slipRatio*mu*Fs/0.17,-mu*Fs,mu*Fs);
-    w.omega+=(driveT-Flong*w.r-Math.sign(w.omega)*brakeT-w.omega*0.4)/atv.IW*h;
+    w.omega+=(driveT-Flong*w.r-w.omega*0.4)/atv.IW*h;
+    if(brakeT>0){
+      const dec=brakeT*h/atv.IW;
+      if(Math.abs(w.omega)<=dec)w.omega=0;
+      else w.omega-=Math.sign(w.omega)*dec;
+    }
     w.omega=clamp(w.omega,-18,60);
-    if(brakeT>0&&Math.abs(w.omega)<0.5)w.omega=0;
     let Flat=clamp(-vLat*2400,-mu*Fs*0.95,mu*Fs*0.95);
     const fTot=Math.hypot(Flong,Flat),fMax=mu*Fs;
     if(fTot>fMax){Flong*=fMax/fTot;Flat*=fMax/fTot;}
@@ -1791,6 +1990,9 @@ function stepATV(h,driver,input){
       _v3.y=0;
       applyForceAt(_v3,_pp.x,_pp.y,_pp.z);
     }
+  }
+  if(!driver&&atv.vel.length()<0.35){
+    for(const w of atv.wheels)w.omega=0;
   }
   const cPlus=(atv.wheels[1].comp+atv.wheels[3].comp)/2;
   const cMinus=(atv.wheels[0].comp+atv.wheels[2].comp)/2;
@@ -1833,20 +2035,19 @@ function collideCircle(cx,cz,r,topY){
   if(d<1e-4){const l=Math.hypot(lx,lz)||1;nlx=lx/l;nlz=lz/l;d=1e-4;}
   const pen=r-d;
   _rn.set(-(nlx*atv.right.x+nlz*atv.fwd.x),0,-(nlx*atv.right.z+nlz*atv.fwd.z)).normalize();
-  /* мягкий выталкивающий сдвиг — без «резиновости» */
-  atv.pos.addScaledVector(_rn,Math.min(pen*0.25,0.06));
+  atv.pos.addScaledVector(_rn,Math.min(pen*0.08,0.02));
   _cp.copy(atv.right).multiplyScalar(qx).addScaledVector(atv.fwd,qz).add(atv.pos);
   _cp.y=atv.pos.y-0.35;
   _rc.subVectors(_cp,atv.pos);
   _vp.crossVectors(atv.angVel,_rc).add(atv.vel);
   const vn=_vp.dot(_rn);
-  if(vn<0){
+  if(vn<-0.25){
     _tq2.copy(_rc).cross(_rn);
     applyIinv(_tq2,_v4);
     _v4.cross(_rc);
     const k=atv.invMass+Math.max(_rn.dot(_v4),0);
-    let j=-1.05*vn/k;                 /* e = 0.05: почти без отскока */
-    j=Math.min(j,atv.mass*4.5);       /* ограничение силы удара */
+    let j=-1.0*vn/k;
+    j=Math.min(j,atv.mass*1.5);
     atv.vel.addScaledVector(_rn,j*atv.invMass);
     _tq2.copy(_rc).cross(_rn).multiplyScalar(j);
     applyIinv(_tq2,_v5);
@@ -1857,7 +2058,7 @@ function collideCircle(cx,cz,r,topY){
       _vp.divideScalar(vt);
       atv.vel.addScaledVector(_vp,-Math.min(vt*0.4,j*0.4));
     }
-    if(j>atv.mass*0.7)Audio.thud(clamp(j/(atv.mass*3),0.15,1));
+    if(j>atv.mass*0.5)Audio.thud(clamp(j/(atv.mass*1.2),0.1,0.8);
   }
 }
 function collideBodyObstacles(){
@@ -1932,7 +2133,7 @@ function stepHuman(h,input){
       particles.emit(human.pos.x,WATER_Y+0.1,human.pos.z,rr(-2,2),rr(2,4.5),rr(-2,2),'water',rr(0.05,0.12),0.7);
   }
   if(gun.aiming)
-    human.yaw=damp(human.yaw,cam.yaw,14,h);      /* смотрим туда же, куда целимся */
+    human.yaw=damp(human.yaw,cam.yaw,14,h);
   else if(mv.lengthSq()>0.1)
     human.yaw=damp(human.yaw,Math.atan2(mv.x,mv.z),10,h);
   const hsp=Math.hypot(human.vel.x,human.vel.z);
@@ -1990,7 +2191,7 @@ const particles={
     for(const p of parts){
       if(p.on){
         p.life-=dt;
-        p.v.y-=(p.type==='smoke'?-1.2:(p.type==='dust'?2.5:(p.type==='spark'?5:13)))*dt;
+        p.v.y-=(p.type==='smoke'?-1.2:(p.type==='dust'?2.5:(p.type==='spark'?5:13))*dt;
         if(p.type==='smoke'){p.v.x*=1-0.4*dt;p.v.z*=1-0.4*dt;}
         p.p.addScaledVector(p.v,dt);
         if(p.type==='mud'){
@@ -2084,12 +2285,12 @@ rainMesh.visible=false;
 rainMesh.renderOrder=3;
 scene.add(rainMesh);
 const rainDrops=[];
-for(let i=0;i<RAIN_N;i++)rainDrops.push({p:new V3(START.x+rr(-30,30),rr(4,18),START.z+rr(-30,30)),sp:rr(22,28)});
+for(let i=0;i<RAIN_N;i++)rainDrops.push({p:new V3(START.x+rr(-30,30),rr(4,18),START.z+rr(-30,30)),sp:rr(22,28));
 const rainQuat=new THREE.Quaternion();
 const _rv1=new V3(),_rv2=new V3(0,1,0);
 function updateRain(dt){
   const rl=weather.cur.rain;
-  const n=Math.ceil(RAIN_N*clamp(rl*1.3,0,1));
+  const n=Math.ceil(RAIN_N*clamp(rl*1.3,0,1);
   rainMesh.count=n;
   rainMesh.visible=n>0;
   if(n===0)return;
@@ -2268,12 +2469,12 @@ function mkAnimal(type,x,z,variant){
   else if(type==='moose'){model=buildMoose();def={walk:1.2,run:6.0,fleeR:12,hr:80};}
   else if(type==='wolf'){model=buildWolf();def={walk:1.8,run:8.0,fleeR:16,hr:90};}
   else{model=buildSquirrel();def={walk:2.6,run:5.5,fleeR:6,hr:18};}
-  model.g.scale.setScalar(rr(0.92,1.08));
+  model.g.scale.setScalar(rr(0.92,1.08);
   model.g.traverse(o=>{if(o.isMesh&&type!=='squirrel')o.castShadow=true;});
   scene.add(model.g);
   return {type,model,x,z,y:getGround(x,z),yaw:rr(0,6.28),yawT:0,state:'idle',stateT:rr(1,5),
     phase:rr(0,6),spd:0,tx:x,tz:z,home:{x,z,hr:def.hr},
-    spdWalk:def.walk,spdRun:def.run,fleeR:def.fleeR,
+    spdWalk:def.walk,spdRun:def.run,fleeR:def.fleeR,dead:false,deadT:0,
     howlT:rr(40,140),hopT:0,hopOn:false,cw:rng()<0.5,grPh:rr(0,6)};
 }
 function findLandSpot(cx,cz,minR,maxR){
@@ -2304,9 +2505,34 @@ function spawnFauna(){
 }
 spawnFauna();
 const RU_NAMES={deer:'Олень',moose:'Лось',wolf:'Волк',squirrel:'Белка'};
+function threatPos(){
+  if(state.mode==='drive')return atv.pos;
+  if(state.mode==='heli')return heli.pos;
+  return human.pos;
+}
+function threatSpeed(){
+  if(state.mode==='drive')return atv.vel.length();
+  if(state.mode==='heli')return heli.vel.length();
+  return human.vel.length();
+}
 function updateAnimal(a,dt){
-  const fx=state.mode==='drive'?atv.pos.x:human.pos.x;
-  const fz=state.mode==='drive'?atv.pos.z:human.pos.z;
+  const fx=threatPos().x,fz=threatPos().z;
+  if(a.dead){
+    a.deadT+=dt;
+    if(a.deadT>40){
+      const p=findLandSpot(fx,fz,80,130);
+      if(p){
+        a.dead=false;a.deadT=0;
+        a.x=p.x;a.z=p.z;a.y=getGround(p.x,p.z);
+        a.home={x:p.x,z:p.z,hr:a.home.hr};
+        a.tx=p.x;a.tz=p.z;
+        a.state='idle';a.stateT=rr(2,6);
+      }
+    }
+    a.y=getGround(a.x,a.z);
+    animateAnimal(a,dt);
+    return;
+  }
   const dx=a.x-fx,dz=a.z-fz,dP=Math.hypot(dx,dz);
   if(dP>150){
     const p=findLandSpot(fx,fz,60,110);
@@ -2317,7 +2543,7 @@ function updateAnimal(a,dt){
       a.state='idle';a.stateT=rr(1,4);
     }
   }
-  const threatSp=state.mode==='drive'?atv.vel.length():human.vel.length();
+  const threatSp=threatSpeed();
   let sp=0;
   if(a.state==='idle'){
     a.stateT-=dt;
@@ -2360,7 +2586,7 @@ function updateAnimal(a,dt){
     a.stateT-=dt;
     if(a.stateT<=0){a.state='idle';a.stateT=rr(4,10);}
   }
-  const fleeR=a.fleeR*(state.mode==='drive'&&threatSp>3?1.5:1);
+  const fleeR=a.fleeR*(threatSp>3?1.5:1);
   if(a.type!=='wolf'&&dP<fleeR&&a.state!=='flee'){
     a.state='flee';a.stateT=rr(2.5,4.5);
     if(a.type==='squirrel')Audio.chatter(clamp(1.5/(1+dP*0.1),0.1,0.5));
@@ -2388,7 +2614,7 @@ function updateAnimal(a,dt){
       if(blocked)a.yawT=a.yaw+rr(1.2,2.0);
       else{a.x=nx;a.z=nz;}
     }
-    const hd=Math.hypot(a.x-a.home.x,a.z-a.home.z);
+    const hd=Math.hypot(a.x-a.home.x,a.z-a.home.z;
     if(hd>a.home.hr*1.8){
       a.tx=a.home.x;a.tz=a.home.z;
       if(a.state!=='flee'){a.state='walk';a.stateT=rr(10,20);}
@@ -2400,14 +2626,25 @@ function updateAnimal(a,dt){
 }
 function animateAnimal(a,dt){
   const m=a.model,sp=a.spd||0;
+  if(a.dead){
+    const fall=Math.min(1,a.deadT*1.8);
+    const roll=1.45*(1-Math.pow(1-fall,2));
+    m.g.position.set(a.x,a.y+0.12*(1-fall),a.z);
+    m.g.rotation.set(0,a.yaw,roll);
+    for(const leg of m.legs)leg.rotation.x=damp(leg.rotation.x,0.35,3,dt);
+    if(m.tail)m.tail.rotation.x=damp(m.tail.rotation.x,0,3,dt);
+    if(m.headG)m.headG.rotation.x=damp(m.headG.rotation.x,0.25,3,dt);
+    return;
+  }
+  const baseY=a.model.baseY;
   const movF=clamp(sp/2,0,1);
-  a.phase+=dt*(2+sp*2.6);
-  const legAmp=clamp(sp*0.28,0.04,0.65);
+  a.phase+=dt*(2+sp*2.6;
+  const legAmp=clamp(sp*0.28,0.04,0.65;
   const offs=[0,Math.PI,Math.PI,0];
   for(let i=0;i<m.legs.length;i++)
     m.legs[i].rotation.x=Math.sin(a.phase+offs[i])*legAmp;
   if(m.bodyG){
-    m.bodyG.position.y=a.baseY+Math.abs(Math.sin(a.phase))*0.03*movF;
+    m.bodyG.position.y=baseY+Math.abs(Math.sin(a.phase))*0.03*movF;
     m.bodyG.rotation.z=Math.sin(a.phase)*0.03*movF;
   }
   if(a.type==='deer'||a.type==='moose'){
@@ -2442,7 +2679,7 @@ function updateAnimals(dt){
 const FISH_N=40;
 const fishGeo=(()=>{
   const body=new THREE.SphereGeometry(0.16,10,8);
-  body.scale(1.5,0.75,0.55);
+  body.scale(1.5,0.75,0.55;
   const tail=new THREE.ConeGeometry(0.10,0.20,6);
   tail.rotateX(-Math.PI/2);
   tail.translate(-0.30,0,0);
@@ -2458,19 +2695,18 @@ scene.add(fishMesh);
 const fishes=[];
 for(let i=0;i<FISH_N;i++){
   fishes.push({on:false,x:0,y:0,z:0,yaw:0,yawT:0,spd:rr(0.4,1.3),phase:rr(0,6),s:rr(0.8,1.8),state:'swim',vy:0,jt:0});
-  fishMesh.setColorAt(i,tmpC.setHSL(rr(0.07,0.13),rr(0.25,0.6),rr(0.45,0.68)));
+  fishMesh.setColorAt(i,tmpC.setHSL(rr(0.07,0.13),rr(0.25,0.6),rr(0.45,0.68));
 }
 fishMesh.instanceColor.needsUpdate=true;
 const _fe3=new THREE.Euler(0,0,0,'YXZ'),_fq3=new THREE.Quaternion(),_fp3=new V3();
 function fishSplash(x,z,v){
   for(let k=0;k<10;k++)
     particles.emit(x+rr(-0.25,0.25),WATER_Y+0.05,z+rr(-0.25,0.25),
-      rr(-1.2,1.2),rr(1.5,3.4),rr(-1.2,1.2),'water',rr(0.04,0.09),rr(0.4,0.7));
+      rr(-1.2,1.2),rr(1.5,3.4),rr(-1.2,1.2),'water',rr(0.04,0.09),rr(0.4,0.7);
   Audio.splash(v);
 }
 function updateFish(dt){
-  const fx=state.mode==='drive'?atv.pos.x:human.pos.x;
-  const fz=state.mode==='drive'?atv.pos.z:human.pos.z;
+  const fx=threatPos().x,fz=threatPos().z;
   let spawnTries=0;
   for(let i=0;i<FISH_N;i++){
     const f=fishes[i];
@@ -2483,7 +2719,7 @@ function updateFish(dt){
           f.x=p.x;f.z=p.z;
           const bed=terrainHeight(p.x,p.z);
           f.y=clamp(bed+rr(0.3,0.8),bed+0.2,WATER_Y-0.2);
-          f.yaw=f.yawT=rr(0,6.28);
+          f.yaw=f.yawT=rr(0,6.28;
           f.state='swim';
         }
       }
@@ -2544,10 +2780,11 @@ const Audio={
       this.ctx=new AC();
       const c=this.ctx;
       this.master=c.createGain();this.master.gain.value=0.9;this.master.connect(c.destination);
+      /* квадроцикл */
       this.engGain=c.createGain();this.engGain.gain.value=0;
       this.engFilt=c.createBiquadFilter();this.engFilt.type='lowpass';this.engFilt.frequency.value=500;
       this.engGain.connect(this.engFilt);this.engFilt.connect(this.master);
-      this.osc1=c.createOscillator();this.osc1.type='sawtooth';
+      this.osc1=c.createOscillator();this.osc1.type='sawtooth;
       this.osc2=c.createOscillator();this.osc2.type='square';
       this.g1=c.createGain();this.g1.gain.value=0.5;
       this.g2=c.createGain();this.g2.gain.value=0.28;
@@ -2563,6 +2800,26 @@ const Audio={
       this.engNG=c.createGain();this.engNG.gain.value=0;
       this.engNoise.connect(this.engNF);this.engNF.connect(this.engNG);this.engNG.connect(this.engGain);
       this.engNoise.start();
+      /* вертолёт */
+      this.hGain=c.createGain();this.hGain.gain.value=0;
+      this.hGain.connect(this.master);
+      this.hOsc=c.createOscillator();this.hOsc.type='sawtooth';
+      this.hSub=c.createOscillator();this.hSub.type='square';
+      this.hg1=c.createGain();this.hg1.gain.value=0.4;
+      this.hg2=c.createGain();this.hg2.gain.value=0.22;
+      this.hOsc.connect(this.hg1);this.hSub.connect(this.hg2);
+      this.hg1.connect(this.hGain);this.hg2.connect(this.hGain);
+      this.hOsc.start();this.hSub.start();
+      this.hNoise=c.createBufferSource();this.hNoise.buffer=nb;this.hNoise.loop=true;
+      this.hNF=c.createBiquadFilter();this.hNF.type='bandpass';this.hNF.frequency.value=400;
+      this.hNG=c.createGain();this.hNG.gain.value=0;
+      this.hNoise.connect(this.hNF);this.hNF.connect(this.hNG);this.hNG.connect(this.hGain);
+      this.hNoise.start();
+      this.hChop=c.createOscillator();this.hChop.type='square';
+      this.hCG=c.createGain();this.hCG.gain.value=0;
+      this.hChop.connect(this.hCG);this.hCG.connect(this.hGain.gain);
+      this.hChop.start();
+      /* лес */
       this.for=c.createBufferSource();this.for.buffer=nb;this.for.loop=true;this.for.playbackRate.value=0.5;
       this.forF=c.createBiquadFilter();this.forF.type='lowpass';this.forF.frequency.value=420;
       this.forG=c.createGain();this.forG.gain.value=0.045;
@@ -2581,7 +2838,7 @@ const Audio={
       this.wat=c.createBufferSource();this.wat.buffer=nb;this.wat.loop=true;
       this.watF=c.createBiquadFilter();this.watF.type='highpass';this.watF.frequency.value=900;
       this.watG=c.createGain();this.watG.gain.value=0;
-      this.wat.connect(this.watF);this.watF.connect(this.watG);this.watG.connect(this.master);
+      this.wat.connect(this.watF);this.watF.connect(this.watG);this.watG.connect(this.master;
       this.wat.start();
       this.birds();
       this.on=true;
@@ -2611,7 +2868,7 @@ const Audio={
           o.start(t0);o.stop(t0+0.16);
         }
       }
-      setTimeout(go,rr(2500,8000));
+      setTimeout(go,rr(2500,8000);
     };
     setTimeout(go,1500);
   },
@@ -2620,13 +2877,23 @@ const Audio={
     const t=this.ctx.currentTime;
     const f=48+rpm*108-load*34;
     this.osc1.frequency.setTargetAtTime(f,t,0.04);
-    this.osc2.frequency.setTargetAtTime(f*0.5,t,0.04);
+    this.osc2.frequency.setTargetAtTime(f*0.5,t,0.04;
     this.chop.frequency.setTargetAtTime(13+rpm*72,t,0.05);
     this.chopGain.gain.setTargetAtTime(on?0.4:0,t,0.05);
     this.engFilt.frequency.setTargetAtTime(360+rpm*1500+thr*500+load*400,t,0.05);
     this.engGain.gain.setTargetAtTime(on?(0.045+rpm*0.16+thr*0.06+load*0.05)*att:0,t,0.08);
     this.engNG.gain.setTargetAtTime(on?(0.05+rpm*0.22+thr*0.25)*att:0,t,0.08);
     this.engNF.frequency.setTargetAtTime(500+rpm*2200,t,0.08);
+  },
+  heli(rpm,vol){
+    if(!this.on)return;
+    const t=this.ctx.currentTime;
+    this.hOsc.frequency.setTargetAtTime(28+rpm*46,t,0.1);
+    this.hSub.frequency.setTargetAtTime(14+rpm*23,t,0.1);
+    this.hChop.frequency.setTargetAtTime(6+rpm*17,t,0.1);
+    this.hCG.gain.setTargetAtTime(rpm>0.1?0.5:0,t,0.1);
+    this.hGain.gain.setTargetAtTime(vol*rpm,t,0.12);
+    this.hNG.gain.setTargetAtTime(vol*rpm*0.5,t,0.12);
   },
   rain(g){if(this.on)this.rainG.gain.setTargetAtTime(g,this.ctx.currentTime,0.4);},
   wind(g){if(this.on)this.windG.gain.setTargetAtTime(g,this.ctx.currentTime,0.5);},
@@ -2800,12 +3067,12 @@ const Audio={
   }
 };
 
-/* ============ 18. ВВОД, ПРИЦЕЛИВАНИЕ, СТРЕЛЬБА ============ */
+/* ============ 18. ВВОД, ПРИЦЕЛ, СТРЕЛЬБА ============ */
 const keys={};
 const state={mode:'drive',started:false};
 function setWeather(mode,announce){
   weather.mode=mode;
-  weather.timer=rr(120,260);
+  weather.timer=rr(240,600);
   if(announce)msg('Погода: '+WEATHERS[mode].label,2.2);
 }
 addEventListener('keydown',e=>{
@@ -2813,8 +3080,16 @@ addEventListener('keydown',e=>{
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
   if(!state.started)return;
   if(e.code==='KeyE')toggleVehicle();
-  if(e.code==='KeyR')actionR();
+  if(e.code==='KeyR'){
+    if(state.mode==='heli'){
+      heli.engineOn=!heli.engineOn;
+      msg(heli.engineOn?'Запуск ротора…':'Двигатель заглушен',1.5);
+    }else actionR();
+  }
   if(e.code==='KeyT')summonATV();
+  if(e.code==='KeyG')summonHeli();
+  if(e.code==='KeyF'&&state.mode==='walk'&&human.mode!=='swim'&&gun.reload<=0&&gun.ammo<5)
+    startReload();
   if(e.code==='KeyC'){
     const order=['clear','rain','storm'];
     setWeather(order[(order.indexOf(weather.mode)+1)%3],true);
@@ -2836,7 +3111,6 @@ function formatTime(){
   const h=Math.floor(env.clockH),m=Math.floor((env.clockH%1)*60);
   return pad2(h)+':'+pad2(m);
 }
-/* мышь: ПКМ — прицел (pointer lock), ЛКМ — выстрел */
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('mousedown',e=>{
   if(!state.started)return;
@@ -2853,19 +3127,22 @@ addEventListener('mousedown',e=>{
 addEventListener('mouseup',e=>{
   if(e.button===2&&gun.aiming){
     gun.aiming=false;
+    gun.locked=false;
     if(document.pointerLockElement)document.exitPointerLock();
   }
 });
 document.addEventListener('pointerlockchange',()=>{
-  if(!document.pointerLockElement)gun.aiming=false;
+  if(document.pointerLockElement===renderer.domElement)gun.locked=true;
+  else if(gun.locked){gun.locked=false;gun.aiming=false;}
 });
+document.addEventListener('pointerlockerror',()=>{});
 addEventListener('mousemove',e=>{
   if(gun.aiming){
-    cam.yaw-=e.movementX*0.0026;
-    gun.pitch=clamp(gun.pitch-e.movementY*0.0026,-0.7,0.7);
+    cam.yaw-=e.movementX*0.0030;
+    gun.pitch=clamp(gun.pitch-e.movementY*0.0030,-0.6,0.6);
   }
 });
-const _g1=new V3(),_g2=new V3(),_gq=new THREE.Quaternion();
+const _g1=new V3(),_g2=new V3();
 function fire(){
   if(state.mode!=='walk'||human.mode==='swim')return;
   if(gun.reload>0||gun.cd>0)return;
@@ -2874,8 +3151,9 @@ function fire(){
   cam.shake=Math.min(cam.shake+0.35,0.5);
   Audio.shot();
   mzMk.getWorldPosition(_g1);
-  rifleG.getWorldQuaternion(_gq);
-  _g2.set(0,0,1).applyQuaternion(_gq);
+  const fp=clamp(gun.pitch,-0.6,0.6);
+  const fcp=Math.cos(fp),fsp=Math.sin(fp);
+  _g2.set(Math.sin(cam.yaw)*fcp,fsp,Math.cos(cam.yaw)*fcp);
   gunLight.position.copy(_g1);
   for(let i=0;i<7;i++)
     particles.emit(_g1.x,_g1.y,_g1.z,
@@ -2884,7 +3162,6 @@ function fire(){
   for(let i=0;i<3;i++)
     particles.emit(_g1.x,_g1.y,_g1.z,_g2.x*2+rr(-0.5,0.5),rr(0.4,1),_g2.z*2+rr(-0.5,0.5),
       'smoke',rr(0.04,0.08),rr(0.6,1.2));
-  /* трассировка полёта пули */
   let hitT=170,hitKind=null,hitA=null;
   for(let s=1.5;s<170;s+=1.5){
     const px=_g1.x+_g2.x*s,py=_g1.y+_g2.y*s,pz=_g1.z+_g2.z*s;
@@ -2898,6 +3175,7 @@ function fire(){
     if(done)break;
   }
   for(const a of animals){
+    if(a.dead)continue;
     const rx=a.x-_g1.x,rz=a.z-_g1.z;
     const tt=rx*_g2.x+rz*_g2.z;
     if(tt>0.5&&tt<hitT){
@@ -2911,24 +3189,27 @@ function fire(){
   }
   if(hitKind){
     const hx=_g1.x+_g2.x*hitT,hy=_g1.y+_g2.y*hitT,hz=_g1.z+_g2.z*hitT;
-    for(let i=0;i<8;i++)
+    for(let i=0;i<10;i++)
       particles.emit(hx,hy,hz,rr(-2.5,2.5),rr(0.5,3.5),rr(-2.5,2.5),
-        hitKind==='ground'?'dust':'mud',rr(0.03,0.07),0.5);
+        hitKind==='ground'?'dust':(hitKind==='animal'?'dust':'mud'),rr(0.03,0.07),0.5);
     Audio.thud(0.35);
   }
   if(hitA){
-    hitA.state='flee';hitA.stateT=9;
+    hitA.dead=true;
+    hitA.deadT=0;
+    kills++;
     Audio.chatter(0.7);
-    msg('Попадание!',1.0);
+    msg(RU_NAMES[hitA.type]+' добыт! Трофеи: '+kills,2.2);
   }
   for(const a of animals){
-    if(a!==hitA&&a.state!=='flee'&&Math.hypot(a.x-_g1.x,a.z-_g1.z)<90){
+    if(a!==hitA&&!a.dead&&a.state!=='flee'&&Math.hypot(a.x-_g1.x,a.z-_g1.z)<90){
       a.state='flee';a.stateT=rr(3,6);
     }
   }
   if(gun.ammo===0)startReload();
 }
 function startReload(){
+  if(gun.reload>0)return;
   gun.reload=1.7;
   Audio.click(0.2);
   setTimeout(()=>Audio.click(0.12),650);
@@ -2936,19 +3217,40 @@ function startReload(){
 }
 function toggleVehicle(){
   gun.aiming=false;
+  gun.locked=false;
   if(document.pointerLockElement)document.exitPointerLock();
-  if(state.mode==='drive'){
+  if(state.mode==='drive'||state.mode==='heli'){
+    const wasHeli=state.mode==='heli';
     state.mode='walk';
-    _v1.set(-1.45,0,0).applyQuaternion(atv.quat).add(atv.pos);
-    human.pos.set(_v1.x,getGround(_v1.x,_v1.z),_v1.z);
-    human.vel.copy(atv.vel).multiplyScalar(0.4);
-    human.vel.y=0;
+    const veh=wasHeli?heli:atv;
+    const vg=wasHeli?heliG:atvG;
+    _v1.set(-1.6,0,0).applyQuaternion(vg.quaternion).add(veh.pos);
+    if(wasHeli&&veh.pos.y-heli.skidH>2.5){
+      human.pos.set(_v1.x,veh.pos.y-1.0,_v1.z;
+      human.vel.copy(veh.vel);human.vel.y=-1;
+    }else{
+      human.pos.set(_v1.x,getGround(_v1.x,_v1.z),_v1.z);
+      human.vel.copy(veh.vel).multiplyScalar(0.4);
+      human.vel.y=0;
+    }
     human.mode=waterDepth(human.pos.x,human.pos.z)>1.28?'swim':'walk';
     scene.add(rig.root);
     rig.root.rotation.set(0,0,0);
-    msg('Пешком: WASD — идти, ПКМ — прицел, ЛКМ — выстрел',2.6);
+    msg('Пешком: WASD — идти, ПКМ — прицел, ЛКМ — выстрел, F — перезарядка',2.6);
   }else{
-    if(human.pos.distanceTo(atv.pos)<2.6){
+    const dATV=human.pos.distanceTo(atv.pos);
+    const dHeli=human.pos.distanceTo(heli.pos);
+    if(dHeli<dATV&&dHeli<3.4){
+      state.mode='heli';
+      heliG.add(rig.root);
+      rig.root.position.copy(ROOT_HELI_V);
+      rig.root.rotation.set(0,0,0);
+      if(!heli.engineOn){
+        heli.engineOn=true;
+        msg('Взлёт разрешён: SPACE — вверх, W — вперёд, R — глушить',3);
+      }else
+        msg('За штурвалом! SPACE/SHIFT — высота, W/S — наклон, A/D — разворот',2.6);
+    }else if(dATV<2.6){
       if(waterDepth(atv.pos.x,atv.pos.z)>0.75){
         msg('Квадроцикл слишком глубоко в воде — призовите его (T)',2.5);
         return;
@@ -2958,7 +3260,7 @@ function toggleVehicle(){
       rig.root.position.copy(ROOT_AT_V);
       rig.root.rotation.set(0,0,0);
       msg('За рулём!',1.2);
-    }else msg('Подойдите ближе к квадроциклу',1.5);
+    }else msg('Подойдите к квадроциклу или вертолёту',1.5);
   }
 }
 function actionR(){
@@ -3002,7 +3304,7 @@ function summonATV(){
   atv.pos.set(x,getGround(x,z)+0.33+atv.REST-0.07,z);
   atv.vel.set(0,0,0);
   atv.angVel.set(0,0,0);
-  atv.quat.setFromAxisAngle(upY,Math.atan2(human.pos.x-x,human.pos.z-z));
+  atv.quat.setFromAxisAngle(upY,Math.atan2(human.pos.x-x,human.pos.z-z);
   for(const w of atv.wheels){w.omega=0;w.comp=0;w.prevComp=0;w.susp=atv.REST;w.trackOn=false;}
   atv.engineOn=true;atv.starting=0;
   for(let i=0;i<10;i++)
@@ -3010,23 +3312,86 @@ function summonATV(){
   Audio.thud(0.6);
   msg('Квадроцикл доставлен',1.5);
 }
+function summonHeli(){
+  if(state.mode!=='walk')return;
+  const f=_v1.set(human.pos.x-camera.position.x,0,human.pos.z-camera.position.z);
+  if(f.lengthSq()>0.1)f.normalize();else f.set(0,0,1);
+  let best=null,bd=1e9;
+  for(let r=4;r<=10;r+=1.5)for(let a=0;a<10;a++){
+    const x=human.pos.x+f.x*r+Math.cos(a*0.628)*r*0.6;
+    const z=human.pos.z+f.z*r+Math.sin(a*0.628)*r*0.6;
+    if(terrainHeight(x,z)<0.7)continue;
+    const g=getGround(x,z);
+    let ok=true;
+    for(const o of obstaclesNear(x,z)){
+      if(o.type==='tree'&&Math.hypot(x-o.x,z-o.z)<o.r+2.5){ok=false;break;}
+    }
+    if(!ok)continue;
+    const score=Math.abs(r-6);
+    if(score<bd){bd=score;best=[x,z,g];}
+  }
+  if(!best){
+    const bx=human.pos.x+f.x*6,bz=human.pos.z+f.z*6;
+    best=[bx,getGround(bx,bz),bz];
+  }
+  heli.pos.set(best[0],best[1]+heli.skidH,best[2]);
+  heli.vel.set(0,0,0);
+  heli.yaw=Math.atan2(human.pos.x-best[0],human.pos.z-best[2]);
+  heli.pitch=0;heli.roll=0;
+  heli.rotor=0;heli.engineOn=false;
+  for(let i=0;i<12;i++)
+    particles.emit(best[0],best[1]+0.5,best[2],rr(-3,3),rr(1,3),rr(-3,3),'dust',rr(0.1,0.2),0.9);
+  Audio.thud(0.6);
+  msg('Вертолёт на площадке — подойдите и нажмите E',2.5);
+}
 
 /* ============ 19. КАМЕРА ============ */
 const cam={yaw:Math.PI,pos:new V3(START.x,START.y+5,START.z+6),look:new V3(START.x,2.7,START.z),shake:0};
 function updateCamera(dt){
   const drive=state.mode==='drive';
+  const heliMode=state.mode==='heli';
+  const sp=drive?atv.vel.length():(heliMode?heli.vel.length():human.vel.length();
+  const vv=drive?Math.abs(atv.vel.y):0;
+  cam.shake=damp(cam.shake,clamp(vv*0.01+sp*0.0012,0,0.09)*(drive?1:0.3)+(heliMode?heli.rotor*0.015:0),6,dt);
+  const t=performance.now()*0.001;
+  if(gun.aiming&&!drive&&!heliMode&&human.mode!=='swim'){
+    const yaw=cam.yaw,pitch=clamp(gun.pitch,-0.6,0.6);
+    const cp=Math.cos(pitch),spn=Math.sin(pitch;
+    const ax=Math.sin(yaw)*cp,ay=spn,az=Math.cos(yaw)*cp;
+    const hx=human.pos.x,hy=human.pos.y+1.5,hz=human.pos.z;
+    const rx=-Math.cos(yaw),rz=Math.sin(yaw);
+    const dist=1.85;
+    let px=hx-ax*dist+rx*0.4;
+    let pz=hz-az*dist+rz*0.4;
+    let py=hy-ay*dist+0.15;
+    const g=getGround(px,pz)+0.5;
+    if(py<g)py=g;
+    cam.pos.x=damp(cam.pos.x,px,14,dt);
+    cam.pos.y=damp(cam.pos.y,py,14,dt);
+    cam.pos.z=damp(cam.pos.z,pz,14,dt);
+    cam.look.set(hx+ax*30,hy+ay*30,hz+az*30);
+    camera.position.set(
+      cam.pos.x+Math.sin(t*31)*cam.shake,
+      cam.pos.y+Math.sin(t*39)*cam.shake*0.8,
+      cam.pos.z+Math.cos(t*27)*cam.shake);
+    camera.lookAt(cam.look);
+    camera.fov=damp(camera.fov,46,12,dt);
+    camera.updateProjectionMatrix();
+    return;
+  }
   const target=drive?_v1.copy(atv.pos)
+    :heliMode?_v1.copy(heli.pos).add(_v3.set(0,1.0,0))
     :_v2.set(human.pos.x,human.mode==='swim'?WATER_Y+0.35:human.pos.y+1.25,human.pos.z);
   let wantYaw;
   if(drive){
     _v3.set(0,0,1).applyQuaternion(atv.quat);
     wantYaw=Math.atan2(_v3.x,_v3.z);
-  }else wantYaw=gun.aiming?cam.yaw:human.yaw;
+  }else if(heliMode)wantYaw=heli.yaw;
+  else wantYaw=human.yaw;
   const dY=wrapPI(wantYaw-cam.yaw);
   cam.yaw+=dY*(1-Math.exp(-7*dt));
-  const sp=drive?atv.vel.length():human.vel.length();
-  const dist=gun.aiming?2.4:(drive?5.5+sp*0.05:3.2);
-  const h=drive?1.7+sp*0.02:1.0;
+  const dist=drive?5.5+sp*0.05:(heliMode?8+sp*0.06:3.2);
+  const h=drive?1.7+sp*0.02:(heliMode?2.2:1.0);
   const cx=target.x-Math.sin(cam.yaw)*dist;
   const cz=target.z-Math.cos(cam.yaw)*dist;
   let cy=target.y+h;
@@ -3036,16 +3401,13 @@ function updateCamera(dt){
   cam.pos.y=damp(cam.pos.y,cy,5.5,dt);
   cam.pos.z=damp(cam.pos.z,cz,7,dt);
   cam.look.lerp(target,1-Math.exp(-9*dt));
-  const vv=drive?Math.abs(atv.vel.y):0;
-  cam.shake=damp(cam.shake,clamp(vv*0.01+sp*0.0012,0,0.09)*(drive?1:0.3),6,dt);
-  const t=performance.now()*0.001;
   camera.position.set(
     cam.pos.x+Math.sin(t*31)*cam.shake,
     cam.pos.y+Math.sin(t*39)*cam.shake*0.8,
     cam.pos.z+Math.cos(t*27)*cam.shake);
   camera.lookAt(cam.look);
-  const fovT=gun.aiming?46:62+clamp(sp*0.72,0,14);
-  camera.fov=damp(camera.fov,fovT,gun.aiming?10:4,dt);
+  const fovT=gun.aiming?46:62+clamp(sp*(heliMode?0.5:0.72),0,14);
+  camera.fov=damp(camera.fov,fovT,heliMode?6:4,dt);
   camera.updateProjectionMatrix();
 }
 
@@ -3054,7 +3416,7 @@ const el=id=>document.getElementById(id);
 const speedVal=el('speedVal'),rpmFill=el('rpmFill'),engineState=el('engineState'),
       modeBadge=el('modeBadge'),hintBar=el('hintBar'),msgEl=el('msg'),
       depthTag=el('depthTag'),waterTint=el('waterTint'),rainTint=el('rainTint'),
-      envTag=el('envTag'),faunaTag=el('faunaTag'),
+      envTag=el('envTag'),faunaTag=el('faunaTag'),killTag=el('killTag'),
       crossEl=el('cross'),ammoBox=el('ammo');
 const ammoPips=[];
 {
@@ -3074,17 +3436,26 @@ let hudT=0;
 function updateHUD(dt){
   if(msgT>0){msgT-=dt;if(msgT<=0)msgEl.style.opacity=0;}
   hudT-=dt;if(hudT>0)return;hudT=0.08;
-  const sp=(state.mode==='drive'?atv.vel.length():human.vel.length())*3.6;
+  const sp=(state.mode==='drive'?atv.vel.length():(state.mode==='heli'?heli.vel.length():human.vel.length())*3.6;
   speedVal.textContent=Math.round(sp);
-  rpmFill.style.width=(engineRPM*100).toFixed(0)+'%';
-  envTag.textContent=formatTime()+' · '+WEATHERS[weather.mode].label;
-  if(atv.starting>0){engineState.textContent='стартер крутит…';engineState.className='ok';}
-  else if(!atv.engineOn){engineState.textContent='двигатель заглох';engineState.className='bad';}
-  else{engineState.textContent='двигатель работает';engineState.className='ok';}
+  envTag.textContent=formatTime()+' · '+WEATHERS[mode].label;
+  killTag.textContent='ТРОФЕИ: '+kills;
+  if(state.mode==='heli'){
+    rpmFill.style.width=(heli.rotor*100).toFixed(0)+'%';
+    if(heli.engineOn&&heli.rotor<0.95){engineState.textContent='ротор раскручивается…';engineState.className='ok';}
+    else if(!heli.engineOn){engineState.textContent='двигатель заглушен';engineState.className='bad';}
+    else{engineState.textContent='ротор работает';engineState.className='ok';}
+  }else{
+    rpmFill.style.width=(engineRPM*100).toFixed(0)+'%';
+    if(atv.starting>0){engineState.textContent='стартер крутит…';engineState.className='ok';}
+    else if(!atv.engineOn){engineState.textContent='двигатель заглох';engineState.className='bad';}
+    else{engineState.textContent='двигатель работает';engineState.className='ok';}
+  }
   let fauna='';
   if(state.started){
     let best=null,bd=20;
     for(const a of animals){
+      if(a.dead)continue;
       const d=Math.hypot(a.x-camera.position.x,a.z-camera.position.z);
       if(d<bd){bd=d;best=a;}
     }
@@ -3099,10 +3470,10 @@ function updateHUD(dt){
   if(state.mode==='walk'&&human.mode==='swim'){
     modeBadge.textContent='ПЛАВАНИЕ';
     depthTag.style.display='block';
-    depthTag.textContent='глубина '+Math.max(0.3,waterDepth(human.pos.x,human.pos.z)).toFixed(1)+' м';
+    depthTag.textContent='глубина '+Math.max(0.3,waterDepth(human.pos.x,human.pos.z).toFixed(1)+' м';
   }else{
     depthTag.style.display='none';
-    modeBadge.textContent=state.mode==='drive'?'ЕЗДА':'ПЕШКОМ';
+    modeBadge.textContent=state.mode==='drive'?'ЕЗДА':(state.mode==='heli'?'ПОЛЁТ':'ПЕШКОМ');
   }
   let hint='';
   if(state.mode==='drive'){
@@ -3111,11 +3482,14 @@ function updateHUD(dt){
     if(_hud.y<0.2)hint='<kbd>R</kbd> поставить квадроцикл на колёса';
     else if(!atv.engineOn&&atv.exhaustWorld.y<WATER_Y+0.05)hint='<kbd>E</kbd> слезть и <kbd>T</kbd> призвать квадроцикл на сушу';
     else if(!atv.engineOn)hint+=' &nbsp; <kbd>R</kbd> завести';
+  }else if(state.mode==='heli'){
+    hint='<kbd>W</kbd>/<kbd>S</kbd> наклон · <kbd>A</kbd>/<kbd>D</kbd> разворот · <kbd>SPACE</kbd>/<kbd>SHIFT</kbd> высота · <kbd>E</kbd> слезть · <kbd>R</kbd> глушить';
   }else{
-    hint='<kbd>WASD</kbd> идти · <kbd>SHIFT</kbd> бег · <kbd>SPACE</kbd> прыжок · <kbd>ПКМ</kbd> прицел';
+    hint='<kbd>WASD</kbd> идти · <kbd>SHIFT</kbd> бег · <kbd>ПКМ</kbd> прицел';
+    if(gun.ammo<5&&gun.reload<=0)hint+=' · <kbd>F</kbd> перезарядка';
     if(human.mode==='swim')hint='<kbd>WASD</kbd> плыть &nbsp; <kbd>SPACE</kbd> вверх &nbsp; <kbd>SHIFT</kbd> вниз';
-    if(human.pos.distanceTo(atv.pos)<2.6)hint='<kbd>E</kbd> сесть на квадроцикл';
-    else if(human.pos.distanceTo(atv.pos)>9)hint+=' &nbsp; <kbd>T</kbd> призвать квадроцикл';
+    if(human.pos.distanceTo(atv.pos)<2.6||human.pos.distanceTo(heli.pos)<3.4)hint='<kbd>E</kbd> сесть в технику';
+    else hint+=' &nbsp; <kbd>T</kbd> квадроцикл · <kbd>G</kbd> вертолёт';
   }
   hintBar.innerHTML=hint;
 }
@@ -3128,13 +3502,13 @@ function emitWheelFX(dt){
     if(!w.contact)continue;
     const wheelV=Math.abs(w.omega*w.r);
     if(w.water>0.06&&wheelV>1.2){
-      waterLoud=Math.max(waterLoud,Math.min(1,wheelV*w.water*0.4));
+      waterLoud=Math.max(waterLoud,Math.min(1,wheelV*w.water*0.4);
       const n=Math.min(6,Math.ceil(wheelV*w.water*0.55*dt*60));
       for(let k=0;k<n;k++){
         _v1.set(0,0,1).applyQuaternion(atv.quat);
         particles.emit(w.hit.x+rr(-0.1,0.1),WATER_Y+0.12,w.hit.z+rr(-0.1,0.1),
           _v1.x*wheelV*rr(0.2,0.55)+rr(-1,1),rr(1.2,2.2+w.water*2),_v1.z*wheelV*rr(0.2,0.55)+rr(-1,1),
-          'water',rr(0.05,0.13),rr(0.4,0.8));
+          'water',rr(0.05,0.13),rr(0.4,0.8);
       }
     }
     if(w.slip>1.6&&w.water<0.05){
@@ -3180,10 +3554,8 @@ function updateEnvironment(dt){
   env.warm=clamp(1-Math.abs(sunE-0.10)*5.5,0,1)*smoothstep(0.0,0.5,sunE+0.1);
   weather.timer-=dt;
   if(weather.timer<=0){
-    const r=rng();
-    const pick=r<0.5?'clear':r<0.8?'rain':'storm';
-    if(pick!==weather.mode)setWeather(pick,true);
-    else weather.timer=rr(100,220);
+    const modes=['clear','rain','storm'].filter(mm=>mm!==weather.mode);
+    setWeather(modes[(rng()*modes.length)|0],true);
   }
   const tgt=WEATHERS[weather.mode];
   weather.cur.rain=damp(weather.cur.rain,tgt.rain,0.45,dt);
@@ -3198,9 +3570,9 @@ function updateEnvironment(dt){
   windAng+=dt*0.03;
   const useMoon=env.dayF<0.03;
   env.lightDir.copy(useMoon?env.moonDir:env.sunDir);
-  sun.intensity=(env.dayF*2.6+env.nightF*0.22)*(1-weather.cur.storm*0.72);
+  sun.intensity=(env.dayF*2.6+env.nightF*0.22)*(1-weather.cur.storm*0.72;
   _c1.setHex(0xff8a4a);_c2.setHex(0xffe6c0);
-  env.lightCol.copy(_c1).lerp(_c2,clamp(sunE*2.2,0,1)).multiplyScalar(clamp(sun.intensity/2.6,0.08,1));
+  env.lightCol.copy(_c1).lerp(_c2,clamp(sunE*2.2,0,1)).multiplyScalar(clamp(sun.intensity/2.6,0.08,1);
   if(useMoon)env.lightCol.setHex(0x7488a8).multiplyScalar(0.5);
   sun.color.copy(env.lightCol).lerp(_c3.setHex(0xffffff),weather.cur.storm*0.4);
   hemi.intensity=(0.24+env.dayF*0.72)*(1-weather.cur.storm*0.35);
@@ -3208,6 +3580,7 @@ function updateEnvironment(dt){
   hemi.groundColor.setHex(0x59684a).lerp(_c3.setHex(0x151a15),env.nightF);
   _c1.setHex(0xcfe0c0);_c2.setHex(0x0e1723);
   fogCol.copy(_c2).lerp(_c1,env.dayF);
+  if(env.warm>0){_c3.setHex(0xd8a8e0;}
   if(env.warm>0){_c3.setHex(0xd8a878);fogCol.lerp(_c3,env.warm*0.6);}
   _c4.setHex(0x87939a);
   fogCol.lerp(_c4,weather.cur.storm*0.8+weather.cur.rain*0.25);
@@ -3252,7 +3625,7 @@ function updateLightning(dt,focus){
       const a=rr(0,Math.PI*2);
       flashTarget.position.set(focus.x,0,focus.z);
       flashLight.position.set(focus.x+Math.cos(a)*120,rr(70,150),focus.z+Math.sin(a)*120);
-      lightning.thunder.push(rr(0.25,2.0));
+      lightning.thunder.push(rr(0.25,2.0);
     }
   }
   lightning.flash*=Math.exp(-7*dt);
@@ -3260,8 +3633,7 @@ function updateLightning(dt,focus){
   for(let i=lightning.thunder.length-1;i>=0;i--){
     lightning.thunder[i]-=dt;
     if(lightning.thunder[i]<=0){
-      Audio.thunder(rr(0.5,1));
-      lightning.thunder.splice(i,1);
+      Audio.thunder(rr(0.5,1);
     }
   }
 }
@@ -3273,24 +3645,28 @@ function updateVisuals(dt){
   atvG.quaternion.copy(atv.quat);
   for(let i=0;i<4;i++){
     const w=atv.wheels[i],vw=wheelsG[i];
-    vw.g.position.set(w.off.x,-w.susp,w.off.z);
+    vw.g.position.set(w.off.x,-w.susp,w.off.z;
     if(vw.front)vw.g.rotation.y=atv.steer;
     vw.spin.rotation.x+=w.omega*dt;
   }
   steeringG.rotation.y=atv.steer*1.15;
+  updateHeliVisuals(dt);
   atvG.updateMatrixWorld(true);
+  heliG.updateMatrixWorld(true);
   if(state.mode==='drive'){
     const sp=atv.vel.length();
     const lat=atv.vel.dot(atv.right);
     driverLean=damp(driverLean,clamp(-atv.steer*Math.min(sp,12)*0.05-lat*0.05,-0.55,0.55),7,dt);
-    driverPitch=damp(driverPitch,clamp(-atv.fwd.dot(atv.vel)*0.014,-0.35,0.35),5,dt);
+    driverPitch=damp(driverPitch,clamp(-atv.fwd.dot(atv.vel)*0.014,-0.35,0.35,5,dt);
     poseDriver(driverLean,driverPitch);
+  }else if(state.mode==='heli'){
+    poseHeli();
   }else{
     poseWalker();
-    const pitch=human.mode==='swim'?1.28+clamp(-human.vel.y*0.15,-0.25,0.25):0;
-    rig.root.rotation.set(pitch,human.yaw,clamp(human.turnRate*0.03,-0.15,0.15));
+    const pitch=human.mode==='swim'?1.28+clamp(-human.vel.y*0.15,-0.25,0.25:0;
+    rig.root.rotation.set(pitch,human.yaw,clamp(human.turnRate*0.03,-0.15,0.15);
     const ry=human.mode==='swim'?human.pos.y:human.pos.y+0.88+human.bob;
-    rig.root.position.set(human.pos.x,ry,human.pos.z);
+    rig.root.position.set(human.pos.x,ry,human.pos.z;
   }
   applyRig();
 }
@@ -3301,9 +3677,9 @@ let acc=0;
 const SUB=1/120;
 const sunPos=new V3();
 function loop(){
-  const dt=clamp(clock.getDelta(),0,0.05);
+  const dt=clamp(clock.getDelta(),0,0.05;
   const t=performance.now()*0.001;
-  const focus=state.started&&state.mode==='walk'?human.pos:atv.pos;
+  const focus=threatPos();
   ensureChunks(focus.x,focus.z);
   if(state.started){
     updateEnvironment(dt);
@@ -3312,10 +3688,10 @@ function loop(){
     acc=Math.min(acc+dt,SUB*5);
     while(acc>=SUB){
       stepATV(SUB,state.mode==='drive',inp);
+      stepHeli(SUB,state.mode==='heli',inp);
       if(state.mode==='walk')stepHuman(SUB,inp);
       acc-=SUB;
     }
-    /* оружие: таймеры и вспышка */
     gun.cd=Math.max(0,gun.cd-dt);
     if(gun.reload>0){
       gun.reload-=dt;
@@ -3326,6 +3702,7 @@ function loop(){
     gunLight.intensity=gun.flash*26;
     updateVisuals(dt);
     emitWheelFX(dt);
+    updateHeliFX(dt);
     particles.update(dt);
     updateExhaust(dt);
     updateLeaves(dt,t);
@@ -3339,6 +3716,8 @@ function loop(){
     const load=clamp(0.25+lastThrottle*0.45+atv.fwd.y*1.6,0,1);
     const att=state.mode==='drive'?1:clamp(2.2/(1+camera.position.distanceTo(atv.pos)*0.08),0.06,1);
     Audio.engine(engineRPM,lastThrottle,load,atv.engineOn&&atv.starting<=0,att);
+    const hVol=state.mode==='heli?0.22:clamp(0.14/(1+camera.position.distanceTo(heli.pos)*0.02),0,0.1);
+    Audio.heli(heli.rotor,hVol;
     sunPos.copy(focus).addScaledVector(env.lightDir,110);
     sun.position.copy(sunPos);
     sun.target.position.set(focus.x,0,focus.z);
@@ -3349,6 +3728,7 @@ function loop(){
   }else{
     sharedTime.value=t;
     waterU.uTime.value=t;
+    updateHeliVisuals(dt);
   }
   skyMesh.position.copy(camera.position);
   stars.position.copy(camera.position);
@@ -3371,7 +3751,7 @@ el('startBtn').addEventListener('click',()=>{
   ov.style.transition='opacity .6s';
   ov.style.opacity=0;
   setTimeout(()=>ov.remove(),650);
-  msg('Лагерь позади. Реки можно пересекать вброд — глубокая вода глушит мотор!',4.5);
+  msg('Лагерь позади. Слева — квадроцикл, за палаткой на площадке — вертолёт (G — вызвать к себе)',4.5);
 });
 </script>
 </body>
